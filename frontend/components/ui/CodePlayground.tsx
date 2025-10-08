@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Play, Loader2, Copy, Check, RotateCcw, Save, Code2, Wallet } from 'lucide-react'
+import { Play, Loader2, Copy, Check, RotateCcw, Save, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import CodeMirror from '@uiw/react-codemirror'
@@ -62,7 +62,9 @@ export function CodePlayground({
 
     setIsConnecting(true)
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      })
       if (accounts && accounts.length > 0) {
         setWalletAddress(accounts[0])
 
@@ -202,10 +204,11 @@ export function CodePlayground({
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {/* Code Editor */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
+            {/* Left: title + language toggle (unchanged) */}
             <div className="flex items-center gap-3">
               <h4 className="text-sm font-medium text-black">Code Editor</h4>
               {showLanguageToggle && initialCodePython && (
@@ -229,15 +232,68 @@ export function CodePlayground({
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={handleSave} className="h-8">
+
+            {/* Right: wallet button (left) + icon buttons (right) */}
+            <div className="flex items-center gap-2">
+              {/* Wallet button — compact width, truncates address */}
+              {currentLanguage === 'typescript' ? (
+                <Button
+                  onClick={connectMetaMask}
+                  disabled={isConnecting || !!walletAddress}
+                  variant={walletAddress ? 'secondary' : 'outline'}
+                  className="h-8 px-2 min-w-[120px] max-w-[220px] md:max-w-[260px] overflow-hidden"
+                  aria-label={walletAddress ? 'Wallet connected' : 'Connect MetaMask'}
+                  title={walletAddress || 'Connect MetaMask'}
+                >
+                  {isConnecting ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-xs">Connecting…</span>
+                    </span>
+                  ) : walletAddress ? (
+                    <span className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-green-500 shrink-0" />
+                      <span className="text-xs truncate">
+                        {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 shrink-0" />
+                      <span className="text-xs truncate">Connect Wallet</span>
+                    </span>
+                  )}
+                </Button>
+              ) : (
+                <div
+                  className="hidden sm:flex items-center gap-2 px-2 h-8 bg-gray-800 rounded-lg border border-gray-700 text-white text-xs"
+                  title="MetaMask runs in browser (TypeScript only)"
+                >
+                  <Wallet className="h-4 w-4" />
+                  <span className="truncate">TS-only wallet</span>
+                </div>
+              )}
+
+              {/* Icon actions */}
+              <Button size="sm" variant="ghost" onClick={handleSave} className="h-8" aria-label="Save">
                 <Save className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={handleCopy} className="h-8">
+              <Button size="sm" variant="ghost" onClick={handleCopy} className="h-8" aria-label="Copy">
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
-              <Button size="sm" variant="ghost" onClick={handleReset} className="h-8">
+              <Button size="sm" variant="ghost" onClick={handleReset} className="h-8" aria-label="Reset">
                 <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleRun}
+                disabled={isRunning}
+                className="h-8"
+                aria-label="Run"
+                title="Run (Ctrl/Cmd + Enter)"
+              >
+                {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
               </Button>
             </div>
           </div>
@@ -252,56 +308,6 @@ export function CodePlayground({
               className="text-sm"
             />
           </div>
-
-          <div className="space-y-2">
-            {/* MetaMask connection button */}
-            {currentLanguage === 'typescript' ? (
-              <Button
-                onClick={connectMetaMask}
-                disabled={isConnecting || !!walletAddress}
-                variant={walletAddress ? 'secondary' : 'outline'}
-                className="w-full"
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connecting...
-                  </>
-                ) : walletAddress ? (
-                  <>
-                    <Wallet className="mr-2 h-4 w-4 text-green-500" />
-                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="mr-2 h-4 w-4" />
-                    Connect MetaMask
-                  </>
-                )}
-              </Button>
-            ) : (
-              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
-                <div className="flex items-center gap-2 text-white text-sm">
-                  <Wallet className="h-4 w-4" />
-                  <span>MetaMask runs in browser (TypeScript only)</span>
-                </div>
-              </div>
-            )}
-
-            <Button onClick={handleRun} disabled={isRunning} className="w-full bg-[#1F1F1F] text-white hover:bg-[#333333]">
-              {isRunning ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Running...
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Run Code
-                </>
-              )}
-            </Button>
-          </div>
         </div>
 
         {/* Output */}
@@ -313,7 +319,7 @@ export function CodePlayground({
             </div>
           </div>
 
-          <div className="border border-gray-700 rounded-lg bg-gray-900 p-4 min-h-[400px] max-h-[400px] overflow-auto">
+          <div className="border border-gray-700 rounded-lg bg-gray-900 p-4 min-h-[160px] max-h-[260px] overflow-auto">
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{error}</AlertDescription>

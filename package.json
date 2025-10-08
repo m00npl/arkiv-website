@@ -17,6 +17,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "ethers": "^6.15.0",
     "react-day-picker": "^9.11.0"
   },
   "lint-staged": {

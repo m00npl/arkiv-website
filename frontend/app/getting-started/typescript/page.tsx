@@ -1,69 +1,86 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CodeBlock } from '@/components/ui/CodeBlock'
+import { Wallet } from 'ethers'
+
+type Bullet = { t: string; v: string }
 
 export default function GettingStartedPage() {
   const [activeSection, setActiveSection] = useState('setup-install')
+  const [generated, setGenerated] = useState<{ address: string; privateKey: string } | null>(null)
+  const [copied, setCopied] = useState<'address' | 'privateKey' | null>(null)
 
-  const story = {
-    setupInstall: {
-      p: `Before we start the story, make sure your environment is ready. You’ll install the SDK, set up a tiny script, and provide credentials.`
-    },
-    connect: {
-      p: `You’re the facilitator. You’ll open a team vote and watch decisions take shape on-chain. First, connect with a private key and an RPC endpoint.`,
-      bullets: [
-        { t: 'Goal', v: 'Create a client that can sign & send.' },
-        { t: 'Why it matters', v: 'Everything else depends on a working connection.' },
-        { t: 'Success check', v: 'The script prints your address.' }
-      ]
-    },
-    open: {
-      p: `Create the space where a decision will be made. The proposal is the room; its BTL is the voting window.`,
-      bullets: [
-        { t: 'Goal', v: 'Write a proposal entity with a finite BTL.' },
-        { t: 'Why it matters', v: 'The window is enforced by expiration; predictable cost comes from time-scoping.' },
-        { t: 'Success check', v: 'You get a proposal.entityKey (the proposal id).' }
-      ]
-    },
-    cast: {
-      p: `Participants vote. Each vote is its own entity, linked to the proposal via proposalKey and attributed to the voter address.`,
-      bullets: [
-        { t: 'Goal', v: 'Create votes with { type="vote", proposalKey, voter, choice }.' },
-        { t: 'Why it matters', v: 'Votes are small, auditable, and independently verifiable.' },
-        { t: 'Success check', v: 'Two vote keys printed; both linked to your proposal.' }
-      ]
-    },
-    batch: {
-      p: `Optionally, add many votes at once—great for voting across multiple proposals, fixtures or demos.`,
-      bullets: [
-        { t: 'Goal', v: 'Create multiple vote entities in a single call.' },
-        { t: 'Success check', v: 'Receipt count matches the number you pushed.' }
-      ]
-    },
-    tally: {
-      p: `Tally by querying annotations. Deterministic reads mean the same query yields the same answer.`,
-      bullets: [
-        { t: 'Goal', v: 'Query votes by proposalKey and choice.' },
-        { t: 'Success check', v: 'YES/NO totals match your inputs.' }
-      ]
-    },
-    listen: {
-      p: `Keep your ear to the door. Watch vote and proposal creations and extensions in real time—no polling.`,
-      bullets: [
-        { t: 'Goal', v: 'Subscribe to creation and extension events for votes.' },
-        { t: 'Success check', v: 'Console logs “[Vote created] …” or “[Vote extended] …”.' }
-      ]
-    },
-    extend: {
-      p: `Need more time? Extend the proposal’s BTL and keep the room open.`,
-      bullets: [
-        { t: 'Goal', v: 'Extend the proposal entity by N blocks.' },
-        { t: 'Success check', v: 'New expiration block printed to console.' }
-      ]
-    }
-  } as const
+  const story = useMemo(
+    () => ({
+      setupInstall: {
+        p: `Before we start the story, make sure your environment is ready. You’ll install the SDK, set up a tiny script, and provide credentials.`
+      },
+      fund: {
+        p: `Before any writes, fund your account with test ETH. You can either use your own wallet or generate a fresh keypair here (for demos). Then open the faucet and top it up.`,
+        bullets: [
+          { t: 'Goal', v: 'Have enough test ETH to pay gas.' },
+          { t: 'Why it matters', v: 'Creates, updates, extensions, and deletes all cost gas.' },
+          { t: 'Success check', v: 'Your wallet shows a non-zero balance.' }
+        ] as Bullet[]
+      },
+      connect: {
+        p: `You’re the facilitator. You’ll open a team vote and watch decisions take shape on-chain. First, connect with a private key and an RPC endpoint.`,
+        bullets: [
+          { t: 'Goal', v: 'Create a client that can sign & send.' },
+          { t: 'Why it matters', v: 'Everything else depends on a working connection.' },
+          { t: 'Success check', v: 'The script prints your address.' }
+        ] as Bullet[]
+      },
+      open: {
+        p: `Create the space where a decision will be made. The proposal is the room; its BTL is the voting window.`,
+        bullets: [
+          { t: 'Goal', v: 'Write a proposal entity with a finite BTL.' },
+          { t: 'Why it matters', v: 'The window is enforced by expiration; predictable cost comes from time-scoping.' },
+          { t: 'Success check', v: 'You get a proposal.entityKey (the proposal id).' }
+        ] as Bullet[]
+      },
+      cast: {
+        p: `Participants vote. Each vote is its own entity, linked to the proposal via proposalKey and attributed to the voter address.`,
+        bullets: [
+          { t: 'Goal', v: 'Create votes with { type="vote", proposalKey, voter, choice }.' },
+          { t: 'Why it matters', v: 'Votes are small, auditable, and independently verifiable.' },
+          { t: 'Success check', v: 'Two vote keys printed; both linked to your proposal.' }
+        ] as Bullet[]
+      },
+      batch: {
+        p: `Optionally, add many votes at once—great for voting across multiple proposals, fixtures or demos.`,
+        bullets: [
+          { t: 'Goal', v: 'Create multiple vote entities in a single call.' },
+          { t: 'Success check', v: 'Receipt count matches the number you pushed.' }
+        ] as Bullet[]
+      },
+      tally: {
+        p: `Tally by querying annotations. Deterministic reads mean the same query yields the same answer.`,
+        bullets: [
+          { t: 'Goal', v: 'Query votes by proposalKey and choice.' },
+          { t: 'Success check', v: 'YES/NO totals match your inputs.' }
+        ] as Bullet[]
+      },
+      listen: {
+        p: `Keep your ear to the door. Watch vote and proposal creations and extensions in real time—no polling.`,
+        bullets: [
+          { t: 'Goal', v: 'Subscribe to creation and extension events for votes (and proposals).' },
+          { t: 'Success check', v: 'Console logs “[Vote created] …” or “[Vote extended] …”.' }
+        ] as Bullet[]
+      },
+      extend: {
+        p: `Need more time? Extend the proposal’s BTL and keep the room open.`,
+        bullets: [
+          { t: 'Goal', v: 'Extend the proposal entity by N blocks.' },
+          { t: 'Success check', v: 'New expiration block printed to console.' }
+        ] as Bullet[]
+      }
+    }),
+    []
+  )
 
+  // Sticky nav highlight
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => entries.forEach((e) => e.isIntersecting && setActiveSection(e.target.id)), {
       root: null,
@@ -85,15 +102,32 @@ export default function GettingStartedPage() {
 
   const navItems = [
     { id: 'setup-install', label: 'Setup & Installation', icon: '🧰' },
-    { id: 'connect', label: '1) Connect & Verify', icon: '🔗' },
-    { id: 'open', label: '2) Open Proposal', icon: '📥' },
-    { id: 'cast', label: '3) Cast Votes', icon: '🗳️' },
-    { id: 'batch', label: '4) (Optional) Batch', icon: '📦' },
-    { id: 'tally', label: '5) Tally Votes', icon: '🔢' },
-    { id: 'listen', label: '6) Watch Live', icon: '📡' },
-    { id: 'extend', label: '7) Extend Window', icon: '⏱️' },
+    { id: 'fund', label: '1) Generate & Fund', icon: '💸' },
+    { id: 'connect', label: '2) Connect & Verify', icon: '🔗' },
+    { id: 'open', label: '3) Open Proposal', icon: '📥' },
+    { id: 'cast', label: '4) Cast Votes', icon: '🗳️' },
+    { id: 'batch', label: '5) (Optional) Batch', icon: '📦' },
+    { id: 'tally', label: '6) Tally Votes', icon: '🔢' },
+    { id: 'listen', label: '7) Watch Live', icon: '📡' },
+    { id: 'extend', label: '8) Extend Window', icon: '⏱️' },
     { id: 'help', label: 'Troubleshooting', icon: '🔧' }
   ]
+
+  const faucetHref = 'https://kaolin.hoodi.arkiv.network/faucet/'
+
+  function generateWallet() {
+    const w = Wallet.createRandom()
+    setGenerated({ address: w.address, privateKey: w.privateKey })
+    setCopied(null)
+  }
+
+  async function copy(text: string, field: 'address' | 'privateKey') {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(field)
+      setTimeout(() => setCopied(null), 1600)
+    } catch {}
+  }
 
   return (
     <div className="min-h-screen bg-white pt-28">
@@ -104,14 +138,14 @@ export default function GettingStartedPage() {
             <div className="inline-block px-4 py-2 bg-[#FE7445] text-white text-sm font-mono rounded-lg shadow-figma-button-primary">
               TypeScript SDK v0.1.16
             </div>
-            <h1 className="text-4xl md:text-5xl font-brutal font-black uppercase text-black">Voting Board — Getting Started</h1>
+            <h1 className="text-4xl md:text-5xl font-brutal font-black uppercase text-black">Arkiv TS SDK — Getting Started</h1>
             <p className="text-xl font-mono text-[#1F1F1F] max-w-3xl mx-auto">
-              Open a proposal, collect votes in real time, tally them, batch more votes, then extend the voting window.
+              Voting Board: Open a proposal, collect votes in real time, tally them, batch more votes, then extend the voting window.
             </p>
             <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-black/5 px-3 py-1 font-mono text-xs text-stone-700">
               <span>Story</span>
               <span>•</span>
-              <span>Connect → Open → Cast → (Batch) → Tally → Watch → Extend</span>
+              <span>Generate & Fund → Connect → Open → Cast → (Batch) → Tally → Watch → Extend</span>
             </div>
           </div>
 
@@ -148,34 +182,10 @@ export default function GettingStartedPage() {
               <h3 className="text-xl font-brutal font-bold mb-4 text-black">Prerequisites</h3>
               <p className="text-stone-900 font-mono text-sm mb-4">Tested with golem-base-sdk@0.1.16 and Node.js 20+. Bun also works.</p>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="text-[#FE7445] text-xl">✓</div>
-                  <div>
-                    <p className="font-mono font-medium text-black">Node.js 18+ (or Bun 1.x)</p>
-                    <p className="text-sm font-mono text-stone-900">LTS recommended</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-[#FE7445] text-xl">✓</div>
-                  <div>
-                    <p className="font-mono font-medium text-black">TypeScript 5+ (optional)</p>
-                    <p className="text-sm font-mono text-stone-900">For typed scripts</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-[#FE7445] text-xl">✓</div>
-                  <div>
-                    <p className="font-mono font-medium text-black">Ethereum Wallet</p>
-                    <p className="text-sm font-mono text-stone-900">With test ETH for your RPC</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-[#FE7445] text-xl">✓</div>
-                  <div>
-                    <p className="font-mono font-medium text-black">RPC Endpoint</p>
-                    <p className="text-sm font-mono text-stone-900">HTTP + (optionally) WS</p>
-                  </div>
-                </div>
+                <CheckRow title="Node.js 18+ (or Bun 1.x)" subtitle="LTS recommended" />
+                <CheckRow title="TypeScript 5+ (optional)" subtitle="For typed scripts" />
+                <CheckRow title="Ethereum Wallet" subtitle="With test ETH for your RPC" />
+                <CheckRow title="RPC Endpoint" subtitle="HTTP + (optionally) WS" />
               </div>
             </div>
 
@@ -186,11 +196,11 @@ export default function GettingStartedPage() {
                 language="bash"
                 code={`# Using npm
 npm init -y
-npm i golem-base-sdk dotenv tslib
+npm i golem-base-sdk dotenv tslib ethers
 
 # or with Bun
 bun init -y
-bun add golem-base-sdk dotenv tslib`}
+bun add golem-base-sdk dotenv tslib ethers`}
               />
             </div>
 
@@ -227,7 +237,8 @@ bun add golem-base-sdk dotenv tslib`}
   "dependencies": {
     "golem-base-sdk": "^0.1.16",
     "dotenv": "^16.4.5",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "ethers": "^6.13.4"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
@@ -245,15 +256,75 @@ bun add golem-base-sdk dotenv tslib`}
                 language="bash"
                 code={`# .env
 PRIVATE_KEY=0x...
-RPC_URL=https://your.rpc.endpoint/rpc
-WS_URL=wss://your.rpc.endpoint/rpc/ws`}
+RPC_URL=https://your.rpc.endpoint/rpc    # e.g. https://kaolin.hoodi.arkiv.network/rpc
+WS_URL=wss://your.rpc.endpoint/rpc/ws    # e.g. wss://kaolin.hoodi.arkiv.network/rpc/ws`}
               />
             </div>
           </section>
 
-          {/* 1) Connect & Verify */}
+          {/* 1) Generate & Fund */}
+          <section id="fund" className="mb-16">
+            <h2 className="text-3xl font-bold mb-8">1) Generate &amp; Fund</h2>
+            <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
+              <p className="font-mono text-sm text-stone-900 mb-4">{story.fund.p}</p>
+              <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-6">
+                {story.fund.bullets.map((b) => (
+                  <li key={b.t}>
+                    <b>{b.t}:</b> {b.v}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <button
+                  onClick={generateWallet}
+                  className="px-4 py-2 rounded-lg bg-black text-white font-mono text-sm hover:opacity-90 transition"
+                >
+                  Generate keypair
+                </button>
+
+                <a
+                  href={faucetHref}
+                  className={`px-4 py-2 rounded-lg font-mono text-sm transition ${
+                    generated?.address ? 'bg-[#0f766e] text-white hover:opacity-90' : 'bg-gray-300 text-gray-700'
+                  }`}
+                >
+                  Open Faucet (prefilled)
+                </a>
+              </div>
+
+              {/* ⚠️ Demo-only warning */}
+              <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 mb-4">
+                <p className="font-mono text-sm text-amber-900">
+                  <b>Warning:</b> This generated wallet is for <b>demo/testing only</b>. <br className="md:hidden" />
+                  Do <b>not</b> deposit real funds. Anyone with the private key controls the funds.
+                </p>
+              </div>
+
+              {/* Display generated keys */}
+              {generated && (
+                <div className="rounded-xl border border-stone-300 bg-white p-4 space-y-4">
+                  <FieldRow
+                    label="Address"
+                    value={generated.address}
+                    onCopy={() => copy(generated.address, 'address')}
+                    copied={copied === 'address'}
+                  />
+
+                  <FieldRow
+                    label="Private Key"
+                    value={generated.privateKey}
+                    onCopy={() => copy(generated.privateKey, 'privateKey')}
+                    copied={copied === 'privateKey'}
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 2) Connect & Verify */}
           <section id="connect" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">1) Connect &amp; Verify</h2>
+            <h2 className="text-3xl font-bold mb-8">2) Connect &amp; Verify</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.connect.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -302,9 +373,9 @@ if (owner) console.log('Your account:', owner);`}
             </div>
           </section>
 
-          {/* 2) Open Proposal */}
+          {/* 3) Open Proposal */}
           <section id="open" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">2) Open Proposal</h2>
+            <h2 className="text-3xl font-bold mb-8">3) Open Proposal</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.open.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -335,9 +406,9 @@ const proposalKey = proposal.entityKey;`}
             </div>
           </section>
 
-          {/* 3) Cast Votes */}
+          {/* 4) Cast Votes */}
           <section id="cast" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">3) Cast Votes</h2>
+            <h2 className="text-3xl font-bold mb-8">4) Cast Votes</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.cast.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -380,9 +451,9 @@ console.log('Votes cast:', vote1.entityKey, vote2.entityKey);`}
             </div>
           </section>
 
-          {/* 4) (Optional) Batch Votes */}
+          {/* 5) (Optional) Batch Votes */}
           <section id="batch" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">4) (Optional) Batch Votes</h2>
+            <h2 className="text-3xl font-bold mb-8">5) (Optional) Batch Votes</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.batch.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -412,9 +483,9 @@ console.log(\`Batch created: \${receipts.length} votes\`);`}
             </div>
           </section>
 
-          {/* 5) Tally Votes */}
+          {/* 6) Tally Votes */}
           <section id="tally" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">5) Tally Votes</h2>
+            <h2 className="text-3xl font-bold mb-8">6) Tally Votes</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.tally.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -437,9 +508,9 @@ console.log(\`Tallies — YES: \${yesVotes.length}, NO: \${noVotes.length}\`);`}
             </div>
           </section>
 
-          {/* 6) Watch Live */}
+          {/* 7) Watch Live */}
           <section id="listen" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">6) Watch Live</h2>
+            <h2 className="text-3xl font-bold mb-8">7) Watch Live</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.listen.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -458,19 +529,14 @@ console.log(\`Tallies — YES: \${yesVotes.length}, NO: \${noVotes.length}\`);`}
     void (async () => {
       try {
         const meta = await (client as any).getEntityMetaData?.(e.entityKey);
-        const strs = Object.fromEntries((meta?.stringAnnotations ?? []).map((a: any) => [a.key, a.value]));
+        const strs = Object.fromEntries((meta?.stringAnnotations ?? [])
+          .map((a: any) => [a.key, a.value]));
         if (strs.type === 'vote') {
           const data = await client.getStorageValue(e.entityKey);
           console.log('[Vote created]', decoder.decode(data), 'key=', e.entityKey);
-
-          // OPTIONAL: show a UI toast or send a webhook/email push here
-          // notify('New vote', { entityKey: e.entityKey, proposalKey: strs.proposalKey });
         } else if (strs.type === 'proposal') {
           const data = await client.getStorageValue(e.entityKey);
           console.log('[Proposal created]', decoder.decode(data), 'key=', e.entityKey);
-
-          // OPTIONAL: alert subscribers a new proposal is open
-          // notify('New proposal', { entityKey: e.entityKey });
         }
       } catch {}
     })();
@@ -480,14 +546,12 @@ console.log(\`Tallies — YES: \${yesVotes.length}, NO: \${noVotes.length}\`);`}
     void (async () => {
       try {
         const meta = await (client as any).getEntityMetaData?.(e.entityKey);
-        const strs = Object.fromEntries((meta?.stringAnnotations ?? []).map((a: any) => [a.key, a.value]));
+        const strs = Object.fromEntries((meta?.stringAnnotations ?? [])
+          .map((a: any) => [a.key, a.value]));
         if (strs.type === 'vote') {
           console.log('[Vote extended]', 'key=', e.entityKey, '→', e.newExpirationBlock);
         } else if (strs.type === 'proposal') {
           console.log('[Proposal extended]', 'key=', e.entityKey, '→', e.newExpirationBlock);
-
-          // OPTIONAL: alert subscribers about window extension
-          // notify('Voting window extended', { entityKey: e.entityKey, newExpirationBlock: e.newExpirationBlock });
         }
       } catch {}
     })();
@@ -497,15 +561,14 @@ console.log(\`Tallies — YES: \${yesVotes.length}, NO: \${noVotes.length}\`);`}
   onDeleted: () => {},
   onError: (err) => console.error('[watchLogs] error:', err),
 });
-console.log('Watching for proposal/vote creations and extensions…');
-`}
+console.log('Watching for proposal/vote creations and extensions…');`}
               />
             </div>
           </section>
 
-          {/* 7) Extend Window */}
+          {/* 8) Extend Window */}
           <section id="extend" className="mb-16">
-            <h2 className="text-3xl font-bold mb-8">7) Extend Window</h2>
+            <h2 className="text-3xl font-bold mb-8">8) Extend Window</h2>
             <div className="bg-gray-200 rounded-2xl p-6 border border-stone-300 shadow-figma-card">
               <p className="font-mono text-sm text-stone-900 mb-4">{story.extend.p}</p>
               <ul className="list-disc list-inside font-mono text-sm text-stone-900 space-y-1 mb-4">
@@ -533,7 +596,7 @@ console.log('Proposal extended to block:', ext.newExpirationBlock);`}
                 <b>Invalid sender:</b> Your RPC may point to an unexpected network for your key. Verify your RPC URL is correct.
               </p>
               <p className="font-mono text-sm text-stone-900">
-                <b>Insufficient funds:</b> Get test ETH for your network; writes require gas.
+                <b>Insufficient funds:</b> Get test ETH from the faucet; writes require gas.
               </p>
               <p className="font-mono text-sm text-stone-900">
                 <b>No events seen?</b> Ensure <code>fromBlock</code> is low enough and keep the process running to receive logs.
@@ -542,6 +605,37 @@ console.log('Proposal extended to block:', ext.newExpirationBlock);`}
           </section>
         </div>
       </main>
+    </div>
+  )
+}
+
+function CheckRow({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="text-[#FE7445] text-xl">✓</div>
+      <div>
+        <p className="font-mono font-medium text-black">{title}</p>
+        {subtitle && <p className="text-sm font-mono text-stone-900">{subtitle}</p>}
+      </div>
+    </div>
+  )
+}
+
+/** A tidy row with label, value, and right-aligned copy button on the same line */
+function FieldRow({ label, value, onCopy, copied }: { label: string; value: string; onCopy: () => void; copied?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-stone-500 font-mono mb-1">{label}</div>
+      <div className="grid grid-cols-[1fr_auto] gap-3 items-center">
+        <div className="font-mono break-all text-sm bg-black/5 rounded-lg px-3 py-2">{value}</div>
+        <button
+          onClick={onCopy}
+          className="px-3 py-2 rounded-lg bg-gray-200 text-black font-mono text-xs hover:bg-gray-300 transition"
+          aria-label={`Copy ${label}`}
+        >
+          {copied ? 'Copied ✓' : `Copy ${label.toLowerCase()}`}
+        </button>
+      </div>
     </div>
   )
 }

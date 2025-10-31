@@ -36,22 +36,24 @@ interface CodePlaygroundProps {
   disabledMessage?: string;
   hideWalletButton?: boolean;
   hideSaveButton?: boolean;
+  onOutput?: (output: string) => void;
 }
 
 export function CodePlayground({
-  initialCode,
-  initialCodePython,
-  language = "typescript",
-  title,
-  description,
-  disabled = false,
-  disabledMessage,
-  showLanguageToggle = true,
-  hideWalletButton = false,
-  hideSaveButton = false,
-}: CodePlaygroundProps) {
+                                 initialCode,
+                                 initialCodePython,
+                                 language = "typescript",
+                                 title,
+                                 description,
+                                 disabled = false,
+                                 disabledMessage,
+                                 showLanguageToggle = true,
+                                 hideWalletButton = false,
+                                 hideSaveButton = false,
+                                 onOutput
+                               }: CodePlaygroundProps) {
   const [currentLanguage, setCurrentLanguage] = useState<
-    "typescript" | "python"
+      "typescript" | "python"
   >(language);
   const [tsCode, setTsCode] = useState(initialCode);
   const [pyCode, setPyCode] = useState(initialCodePython || "");
@@ -76,7 +78,7 @@ export function CodePlayground({
   const connectMetaMask = async () => {
     if (typeof window.ethereum === "undefined") {
       setError(
-        "MetaMask is not installed. Please install MetaMask to use this feature.",
+          "MetaMask is not installed. Please install MetaMask to use this feature.",
       );
       return;
     }
@@ -118,7 +120,7 @@ export function CodePlayground({
         });
 
         setOutput(
-          `Connected to MetaMask!\nWallet: ${accounts[0]}\nNetwork: Kaolin Testnet`,
+            `Connected to MetaMask!\nWallet: ${accounts[0]}\nNetwork: Kaolin Testnet`,
         );
 
         // GTM Event: Wallet Connected
@@ -133,7 +135,7 @@ export function CodePlayground({
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to connect MetaMask",
+          err instanceof Error ? err.message : "Failed to connect MetaMask",
       );
     } finally {
       setIsConnecting(false);
@@ -167,7 +169,7 @@ export function CodePlayground({
         } else {
           // It's likely an HTML error page (404, 500, etc.)
           throw new Error(
-            `API Error: ${response.status} ${response.statusText}. The code execution endpoint is not available.`,
+              `API Error: ${response.status} ${response.statusText}. The code execution endpoint is not available.`,
           );
         }
       }
@@ -175,6 +177,7 @@ export function CodePlayground({
       const data = await response.json();
 
       setOutput(data.output);
+      onOutput?.(data.output);
 
       // GTM Event: Code Execution Success
       if (typeof window !== 'undefined' && window.dataLayer) {
@@ -265,201 +268,201 @@ export function CodePlayground({
   }, [title]);
 
   return (
-    <div className="w-full">
-      {title && (
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold text-black mb-2">{title}</h3>
-          {description && <p className="text-black text-sm">{description}</p>}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-4">
-        {/* Code Editor */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            {/* Left: title + language toggle (unchanged) */}
-            <div className="flex items-center gap-3">
-              <h4 className="text-sm font-medium text-black">Code Editor</h4>
-              {showLanguageToggle && initialCodePython && (
-                <div className="flex gap-1 bg-gray-800 rounded-md p-1">
-                  <button
-                    onClick={() => handleLanguageSwitch("typescript")}
-                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                      currentLanguage === "typescript"
-                        ? "bg-purple-600 text-white"
-                        : "text-white hover:text-white"
-                    }`}
-                  >
-                    TypeScript
-                  </button>
-                  <button
-                    onClick={() => handleLanguageSwitch("python")}
-                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                      currentLanguage === "python"
-                        ? "bg-purple-600 text-white"
-                        : "text-white hover:text-white"
-                    }`}
-                  >
-                    Python
-                  </button>
-                </div>
-              )}
+      <div className="w-full">
+        {title && (
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold text-black mb-2">{title}</h3>
+              {description && <p className="text-black text-sm">{description}</p>}
             </div>
+        )}
 
-            {/* Right: wallet button (left) + icon buttons (right) */}
-            <div className="flex items-center gap-2">
-              {/* Wallet button — compact width, truncates address */}
-              {!hideWalletButton && (
-                currentLanguage === "typescript" ? (
-                  <Button
-                    onClick={connectMetaMask}
-                    disabled={isConnecting || !!walletAddress}
-                    variant={walletAddress ? "secondary" : "outline"}
-                    className="h-8 px-2 min-w-[120px] max-w-[220px] md:max-w-[260px] overflow-hidden"
-                    aria-label={
-                      walletAddress ? "Wallet connected" : "Connect MetaMask"
-                    }
-                    title={walletAddress || "Connect MetaMask"}
-                  >
-                    {isConnecting ? (
-                      <span className="flex items-center gap-2">
+        <div className="grid grid-cols-1 gap-4">
+          {/* Code Editor */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              {/* Left: title + language toggle (unchanged) */}
+              <div className="flex items-center gap-3">
+                <h4 className="text-sm font-medium text-black">Code Editor</h4>
+                {showLanguageToggle && initialCodePython && (
+                    <div className="flex gap-1 bg-gray-800 rounded-md p-1">
+                      <button
+                          onClick={() => handleLanguageSwitch("typescript")}
+                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                              currentLanguage === "typescript"
+                                  ? "bg-purple-600 text-white"
+                                  : "text-white hover:text-white"
+                          }`}
+                      >
+                        TypeScript
+                      </button>
+                      <button
+                          onClick={() => handleLanguageSwitch("python")}
+                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                              currentLanguage === "python"
+                                  ? "bg-purple-600 text-white"
+                                  : "text-white hover:text-white"
+                          }`}
+                      >
+                        Python
+                      </button>
+                    </div>
+                )}
+              </div>
+
+              {/* Right: wallet button (left) + icon buttons (right) */}
+              <div className="flex items-center gap-2">
+                {/* Wallet button — compact width, truncates address */}
+                {!hideWalletButton && (
+                    currentLanguage === "typescript" ? (
+                        <Button
+                            onClick={connectMetaMask}
+                            disabled={isConnecting || !!walletAddress}
+                            variant={walletAddress ? "secondary" : "outline"}
+                            className="h-8 px-2 min-w-[120px] max-w-[220px] md:max-w-[260px] overflow-hidden"
+                            aria-label={
+                              walletAddress ? "Wallet connected" : "Connect MetaMask"
+                            }
+                            title={walletAddress || "Connect MetaMask"}
+                        >
+                          {isConnecting ? (
+                              <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span className="text-xs">Connecting…</span>
                       </span>
-                    ) : walletAddress ? (
-                      <span className="flex items-center gap-2">
+                          ) : walletAddress ? (
+                              <span className="flex items-center gap-2">
                         <Wallet className="h-4 w-4 text-green-500 shrink-0" />
                         <span className="text-xs truncate">
                           {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
                         </span>
                       </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
+                          ) : (
+                              <span className="flex items-center gap-2">
                         <Wallet className="h-4 w-4 shrink-0" />
                         <span className="text-xs truncate">Connect Wallet</span>
                       </span>
-                    )}
-                  </Button>
-                ) : (
-                  <div
-                    className="hidden sm:flex items-center gap-2 px-2 h-8 bg-gray-800 rounded-lg border border-gray-700 text-white text-xs"
-                    title="MetaMask runs in browser (TypeScript only)"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    <span className="truncate">TS-only wallet</span>
-                  </div>
-                )
-              )}
+                          )}
+                        </Button>
+                    ) : (
+                        <div
+                            className="hidden sm:flex items-center gap-2 px-2 h-8 bg-gray-800 rounded-lg border border-gray-700 text-white text-xs"
+                            title="MetaMask runs in browser (TypeScript only)"
+                        >
+                          <Wallet className="h-4 w-4" />
+                          <span className="truncate">TS-only wallet</span>
+                        </div>
+                    )
+                )}
 
-              {/* Icon actions */}
-              {!hideSaveButton && (
+                {/* Icon actions */}
+                {!hideSaveButton && (
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleSave}
+                        className="h-8"
+                        aria-label="Save"
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                )}
                 <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleSave}
-                  className="h-8"
-                  aria-label="Save"
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCopy}
+                    className="h-8"
+                    aria-label="Copy"
                 >
-                  <Save className="h-4 w-4" />
+                  {copied ? (
+                      <Check className="h-4 w-4" />
+                  ) : (
+                      <Copy className="h-4 w-4" />
+                  )}
                 </Button>
+                <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleReset}
+                    className="h-8"
+                    aria-label="Reset"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleRun}
+                    disabled={isRunning || disabled}
+                    className={`h-8 ${!disabled && !isRunning ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                    aria-label="Run"
+                    title={disabled ? (disabledMessage || "Disabled") : "Run (Ctrl/Cmd + Enter)"}
+                >
+                  {isRunning ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                      <Play className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="border border-gray-700 rounded-lg overflow-hidden">
+              <CodeMirror
+                  value={code}
+                  height="400px"
+                  theme={oneDark}
+                  extensions={[
+                    currentLanguage === "typescript"
+                        ? javascript({ typescript: true })
+                        : python(),
+                  ]}
+                  onChange={(value) => setCode(value)}
+                  className="text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Output */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <h4 className="text-sm font-medium text-black">Output</h4>
+              <div
+                  id="saved-indicator"
+                  className="text-sm text-green-500 opacity-0 transition-opacity"
+              >
+                Saved!
+              </div>
+            </div>
+
+            <div className="border border-gray-700 rounded-lg bg-gray-900 p-4 min-h-[160px] max-h-[260px] overflow-auto">
+              {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
               )}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCopy}
-                className="h-8"
-                aria-label="Copy"
-              >
-                {copied ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleReset}
-                className="h-8"
-                aria-label="Reset"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleRun}
-                disabled={isRunning || disabled}
-                className={`h-8 ${!disabled && !isRunning ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
-                aria-label="Run"
-                title={disabled ? (disabledMessage || "Disabled") : "Run (Ctrl/Cmd + Enter)"}
-              >
-                {isRunning ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
 
-          <div className="border border-gray-700 rounded-lg overflow-hidden">
-            <CodeMirror
-              value={code}
-              height="400px"
-              theme={oneDark}
-              extensions={[
-                currentLanguage === "typescript"
-                  ? javascript({ typescript: true })
-                  : python(),
-              ]}
-              onChange={(value) => setCode(value)}
-              className="text-sm"
-            />
-          </div>
-        </div>
-
-        {/* Output */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <h4 className="text-sm font-medium text-black">Output</h4>
-            <div
-              id="saved-indicator"
-              className="text-sm text-green-500 opacity-0 transition-opacity"
-            >
-              Saved!
-            </div>
-          </div>
-
-          <div className="border border-gray-700 rounded-lg bg-gray-900 p-4 min-h-[160px] max-h-[260px] overflow-auto">
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {output ? (
-              <pre className="text-sm text-white font-mono whitespace-pre-wrap">
+              {output ? (
+                  <pre className="text-sm text-white font-mono whitespace-pre-wrap">
                 {output}
               </pre>
-            ) : (
-              !error &&
-              !isRunning && (
-                <p className="text-white text-sm">
-                  Click "Run Code" to execute your code
-                </p>
-              )
-            )}
+              ) : (
+                  !error &&
+                  !isRunning && (
+                      <p className="text-white text-sm">
+                        Click "Run Code" to execute your code
+                      </p>
+                  )
+              )}
 
-            {isRunning && (
-              <div className="flex items-center gap-2 text-white">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Executing...</span>
-              </div>
-            )}
+              {isRunning && (
+                  <div className="flex items-center gap-2 text-white">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Executing...</span>
+                  </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
   );
 }
